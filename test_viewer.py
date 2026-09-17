@@ -97,6 +97,39 @@ class ViewerTests(unittest.TestCase):
             v.canvas.draw()
             self.assertEqual(v.legend is None, v.legend_position.currentData() == "hidden")
 
+    def test_scrollable_legend_for_many_steps(self):
+        v = self.viewer
+        datasets = v.datasets * 2  # 86 plotted steps exceed the compact legend limit.
+        v.set_data(SimpleNamespace(datasets=datasets))
+        self.app.processEvents()
+        self.assertEqual(len(v.ax.lines), 86)
+        self.assertIsNone(v.legend)
+        self.assertTrue(v.legend_dock.isVisible())
+        self.assertEqual(v.legend_list.count(), 86)
+        self.assertEqual(v.legend_list.item(0).text(), "Step 1")
+        self.assertEqual(v.legend_list.item(85).text(), "Step 86")
+        v.legend_list.setCurrentRow(85)
+        self.assertEqual(v.step_list.currentRow(), 85)
+        v.legend_position.setCurrentIndex(v.legend_position.findData("hidden"))
+        self.assertFalse(v.legend_dock.isVisible())
+        v.legend_position.setCurrentIndex(v.legend_position.findData("outside right upper"))
+        self.assertTrue(v.legend_dock.isVisible())
+
+    def test_large_biologic_capacity_voltage_has_right_legend(self):
+        path = Path('/home/kevin/Dropbox/UAntwerp/PhD_thesis/copper_flow_battery/data/first_test_5_1000cycle_CA8.mpr')
+        if not path.exists():
+            self.skipTest("Large BioLogic fixture not present")
+        v = self.viewer
+        v.path = path
+        v.set_data(read_file(path))
+        v.x_axis.setCurrentIndex(v.x_axis.findData(CAPACITY))
+        v.y_axis.setCurrentIndex(v.y_axis.findData("EI_0.CalcPotential"))
+        self.app.processEvents()
+        self.assertGreater(len(v.ax.lines), 60)
+        self.assertEqual(v.legend_list.count(), len(v.ax.lines))
+        self.assertTrue(v.legend_dock.isVisible())
+        self.assertEqual(v.ax.get_ylabel(), "Voltage (V)")
+
     def test_real_file_async_and_invalid_file(self):
         v = self.viewer
         path = Path('/home/kevin/Dropbox/UAntwerp/PhD_thesis/solid_booster_pulsatile_flow/solid_booster_potentiostat/data/cycling_add_lfp_wrong_time.nox')

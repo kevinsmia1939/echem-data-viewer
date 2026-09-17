@@ -66,11 +66,14 @@ behavior have not been run on Windows in this environment.
   greater than 1 mA. Missing signals are skipped and counted in the status bar.
 - The default legend is outside the axes with columns sized to fit the window.
   Drag it or select a preset. Resizing or changing plot options resets its
-  position to the selected preset. For very many steps, select fewer steps or
-  hide the legend; the step list remains available. For more than 60 curves,
-  outside legends are automatically hidden to avoid consuming the plot area.
+  position to the selected preset. For more than 60 curves, a scrollable step
+  legend appears to the right of the plot regardless of the chosen preset
+  (except **Hidden**). Clicking a legend row locates that step in the left list.
+  This avoids covering the data or trying to fit hundreds of labels in the plot.
 - **Save plot…** / Ctrl+S exports PNG, PDF, SVG or JPEG, including the current
-  zoom and legend position. The toolbar also supports pan, zoom and saving.
+  zoom and draggable Matplotlib legend position. The scrollable right-side
+  legend is an on-screen control and is not included in exported figures.
+  The toolbar also supports pan, zoom and saving.
 - **Open data…** / Ctrl+O opens another measurement. Opening multiple files from
   the file manager creates a separate window for each file.
 

@@ -9,6 +9,7 @@ import sys
 from PySide6 import QtCore, QtGui, QtWidgets
 import numpy as np
 from matplotlib.figure import Figure
+from matplotlib.colors import to_rgba
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
 FORK = Path(__file__).resolve().parent / "galvani"
@@ -268,6 +269,17 @@ class Viewer(QtWidgets.QMainWindow):
         splitter.setSizes([270, 1130])
         layout.addWidget(splitter, 1)
         self.setCentralWidget(central)
+        self.legend_dock = QtWidgets.QDockWidget("Step legend", self)
+        self.legend_dock.setAllowedAreas(QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
+        self.legend_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.legend_list = QtWidgets.QListWidget()
+        self.legend_list.setUniformItemSizes(True)
+        self.legend_list.setToolTip("Scroll to see every plotted step. Select a row to locate it in the step list.")
+        self.legend_list.currentRowChanged.connect(self.locate_legend_step)
+        self.legend_dock.setWidget(self.legend_list)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.legend_dock)
+        self.legend_dock.setMinimumWidth(170)
+        self.legend_dock.hide()
         self.statusBar().showMessage("Open a .nox, .mpr or .mpt file to begin.")
         self.save_button.setEnabled(False)
         self.canvas.mpl_connect("resize_event", self.on_resize)
@@ -358,6 +370,14 @@ class Viewer(QtWidgets.QMainWindow):
         self.step_list.blockSignals(False)
         self.redraw()
 
+    def locate_legend_step(self, row):
+        if row < 0:
+            return
+        item = self.legend_list.item(row)
+        step_index = item.data(QtCore.Qt.ItemDataRole.UserRole)
+        self.step_list.setCurrentRow(step_index)
+        self.step_list.scrollToItem(self.step_list.item(step_index))
+
     def redraw(self, *_):
         if self.nox is None:
             return
@@ -409,8 +429,8 @@ class Viewer(QtWidgets.QMainWindow):
         self.save_button.setEnabled(bool(self.ax.lines))
         self.statusBar().showMessage(
             f"{len(self.ax.lines)} steps plotted · {skipped} selected steps missing compatible or valid signals. "
-            + ("Legend hidden for >60 curves; use the step list to select fewer."
-               if len(self.ax.lines) > 60 and self.legend_position.currentData().startswith("outside")
+            + ("Scroll the step legend on the right."
+               if self.legend_dock.isVisible()
                else "Drag the legend to reposition it.")
         )
 
@@ -419,14 +439,39 @@ class Viewer(QtWidgets.QMainWindow):
             self.legend.set_draggable(False)
             self.legend.remove()
             self.legend = None
+        self.legend_dock.hide()
+        self.legend_list.clear()
+
+    def make_scrollable_legend(self, handles, labels):
+        self.legend_list.blockSignals(True)
+        self.legend_list.clear()
+        for line, label in zip(handles, labels):
+            pixmap = QtGui.QPixmap(38, 14)
+            pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+            painter = QtGui.QPainter(pixmap)
+            color = QtGui.QColor.fromRgbF(*to_rgba(line.get_color()))
+            pen = QtGui.QPen(color, 3)
+            if line.get_linestyle() in ("--", "dashed"):
+                pen.setStyle(QtCore.Qt.PenStyle.DashLine)
+            elif line.get_linestyle() in (":", "dotted"):
+                pen.setStyle(QtCore.Qt.PenStyle.DotLine)
+            painter.setPen(pen)
+            painter.drawLine(3, 7, 35, 7)
+            painter.end()
+            item = QtWidgets.QListWidgetItem(QtGui.QIcon(pixmap), label)
+            item.setData(QtCore.Qt.ItemDataRole.UserRole, int(label.removeprefix("Step ")) - 1)
+            self.legend_list.addItem(item)
+        self.legend_list.blockSignals(False)
+        self.legend_dock.show()
 
     def make_legend(self):
         handles, labels = self.ax.get_legend_handles_labels()
         position = self.legend_position.currentData()
         if not handles or position == "hidden":
             return
-        if len(handles) > 60 and position.startswith("outside"):
-            return  # Huge cycling runs must not let the legend consume the plot.
+        if len(handles) > 60:
+            self.make_scrollable_legend(handles, labels)
+            return
         if position.startswith("outside"):
             # Allocate columns to fit the available height. Constrained layout
             # reserves a separate area for the figure legend, away from data.
@@ -442,7 +487,7 @@ class Viewer(QtWidgets.QMainWindow):
         self.legend.set_draggable(True)
 
     def on_resize(self, _):
-        if self.nox and self.legend_position.currentData().startswith("outside"):
+        if self.nox and self.legend is not None and self.legend_position.currentData().startswith("outside"):
             self.remove_legend()
             self.make_legend()
             self.canvas.draw_idle()
