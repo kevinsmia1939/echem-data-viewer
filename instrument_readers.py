@@ -1,12 +1,48 @@
 """Adapters from bundled instrument readers to the viewer's dataset interface."""
 
+import os
+import platform
+from pathlib import Path
 from types import SimpleNamespace
 import shutil
+import threading
 
 import numpy as np
 import pandas as pd
 
 from galvani.Nova import NovaDataset
+
+
+_MDB_PATH_LOCK = threading.Lock()
+
+
+def bundled_mdb_export():
+    """Return our MDBTools executable for a supported platform, if present."""
+    machine = platform.machine().lower()
+    if machine not in ("x86_64", "amd64"):
+        return None
+    bundle = Path(__file__).resolve().parent / "vendor" / "mdbtools"
+    if platform.system() == "Linux":
+        candidate = bundle / "linux-x86_64" / "mdb-export"
+        return candidate if candidate.is_file() and os.access(candidate, os.X_OK) else None
+    if platform.system() == "Windows":
+        candidate = bundle / "windows" / "mdb-export.exe"
+        return candidate if candidate.is_file() else None
+    return None
+
+
+def ensure_mdb_export():
+    """Galvani launches `mdb-export` by name; put our copy first on this process's PATH."""
+    bundled = bundled_mdb_export()
+    if bundled is not None:
+        with _MDB_PATH_LOCK:
+            paths = os.environ.get("PATH", "").split(os.pathsep)
+            if str(bundled.parent) not in paths:
+                os.environ["PATH"] = str(bundled.parent) + os.pathsep + os.environ.get("PATH", "")
+    if not shutil.which("mdb-export"):
+        raise RuntimeError("No usable MDBTools mdb-export found. Reinstall the viewer with "
+                           "its bundled tools, or install MDBTools for this platform.")
+    return shutil.which("mdb-export")
 
 
 def _datasets_from_frame(frame, instrument, groups=None, aliases=None, units=None,
@@ -109,9 +145,7 @@ def read_neware(path):
 
 
 def read_arbin(path):
-    if not shutil.which("mdb-export"):
-        raise RuntimeError("Arbin .res reading requires MDBTools (mdb-export) on PATH. "
-                           "Install the mdbtools package, then reopen the file.")
+    ensure_mdb_export()
     from galvani.res2sqlite import convert_arbin_to_sqlite
 
     connection = convert_arbin_to_sqlite(str(path))

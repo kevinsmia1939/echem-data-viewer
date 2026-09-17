@@ -1,5 +1,6 @@
 """Run headlessly: QT_QPA_PLATFORM=offscreen python3 -m unittest -v test_viewer."""
 from pathlib import Path
+import os
 import tempfile
 import time
 import unittest
@@ -10,6 +11,7 @@ from matplotlib.backend_bases import MouseEvent
 from echem_data_viewer import QtWidgets, Viewer, FileLoader, signal_values, CAPACITY, FORK, read_file, biologic_datasets
 from galvani.Nova import NovaDataset
 from types import SimpleNamespace
+from instrument_readers import bundled_mdb_export, ensure_mdb_export
 
 
 class InstrumentReaderTests(unittest.TestCase):
@@ -44,20 +46,26 @@ class InstrumentReaderTests(unittest.TestCase):
         self.assertTrue(any(np.ptp(signal_values(d, CAPACITY)) > 0 for d in data.datasets))
 
     def test_arbin_galvani_conversion(self):
-        import shutil
-        if not shutil.which('mdb-export'):
-            self.skipTest('MDBTools is not installed')
         root = Path(__file__).parent / 'galvani/tests/testdata'
-        data = read_file(root / 'arbin1.res')
+        # Prove that the viewer needs no separately installed mdb-export.
+        with patch.dict(os.environ, {'PATH': ''}):
+            self.assertEqual(Path(ensure_mdb_export()), bundled_mdb_export())
+            data = read_file(root / 'arbin1.res')
         self.assertGreater(len(data.datasets), 1)
         active = next(d for d in data.datasets if np.ptp(signal_values(d, CAPACITY)) > 0)
         self.assertIn('EI_0.CalcPotential', active)
         self.assertEqual(signal_values(active, CAPACITY)[0], 0)
 
     def test_arbin_missing_mdbtools_message(self):
-        with patch('instrument_readers.shutil.which', return_value=None):
+        with patch('instrument_readers.bundled_mdb_export', return_value=None), \
+             patch('instrument_readers.shutil.which', return_value=None):
             with self.assertRaisesRegex(RuntimeError, 'MDBTools'):
                 read_file(Path('sample.res'))
+
+    def test_windows_mdbtools_bundle_present(self):
+        with patch('instrument_readers.platform.system', return_value='Windows'), \
+             patch('instrument_readers.platform.machine', return_value='AMD64'):
+            self.assertEqual(bundled_mdb_export().name, 'mdb-export.exe')
 
 
 class ViewerTests(unittest.TestCase):

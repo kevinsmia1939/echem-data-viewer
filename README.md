@@ -3,8 +3,9 @@
 Launch **Electrochemistry Data Viewer** from the applications menu, or double-click
 a `.nox`, `.mpr`, `.mpt`, `.dta`, `.nda`, `.ndax`, or `.res` file. The project pins
 the [Galvani fork](https://github.com/kevinsmia1939/galvani),
-[gamry-parser](https://github.com/bcliang/gamry-parser), and
-[NewareNDA](https://github.com/Solid-Energy-Systems/NewareNDA) as Git submodules.
+[gamry-parser](https://github.com/bcliang/gamry-parser),
+[NewareNDA](https://github.com/Solid-Energy-Systems/NewareNDA), and
+[MDBTools](https://github.com/mdbtools/mdbtools) as Git submodules.
 The viewer uses these bundled readers, not unrelated installed versions.
 
 ## Screenshots
@@ -33,7 +34,8 @@ NumPy and pandas from `requirements.txt`, then installs a launcher and MIME asso
 the current user. No `sudo` is needed. On Linux, `desktop-file-validate`,
 `update-mime-database`, `update-desktop-database` and `xdg-mime` must also be
 available. The app itself does not need internet access after installation.
-Arbin `.res` also needs the system `mdbtools` package (`mdb-export` on PATH).
+Arbin `.res` uses the bundled static `mdb-export` on Linux x86_64. Other Linux
+architectures can still use a system `mdb-export` on `PATH`.
 
 ## Install on Windows
 
@@ -50,10 +52,11 @@ and `.res` under the current
 user (no administrator rights needed). Windows may retain an existing protected
 default-app choice; if double-click opens another program, select the viewer in
 **Settings → Apps → Default apps** or **Open with**. Use `-SkipFileAssociations`
-to install without registering these extensions. Windows installation and GUI
-behavior have not been run on Windows in this environment.
-Arbin `.res` requires a separate MDBTools installation with `mdb-export` on PATH;
-the Windows installer does not bundle it. Other formats need only the Python dependencies.
+to install without registering these extensions.
+Arbin `.res` uses the bundled `mdb-export.exe` on 64-bit Windows; no separate
+MDBTools installation is needed there. The Windows executable and GUI have not
+been run on Windows in this environment. Other architectures can use a system
+`mdb-export` on `PATH` if available.
 
 - Default axes: time (s) horizontally, voltage (V) vertically.
 - **Time unit** selects seconds (default), hours, or days for time signals on
@@ -89,6 +92,7 @@ the Windows installer does not bundle it. Other formats need only the Python dep
   NewareNDA reader interpolates.
 - Arbin `.res` uses Galvani's converter and MDBTools. Curves split at test,
   cycle and step boundaries; Arbin's Ah counters become recorded capacity in mAh.
+
 - Check/uncheck steps; **Active** selects steps with median absolute current
   greater than 1 mA. Missing signals are skipped and counted in the status bar.
 - The default legend is outside the axes with columns sized to fit the window.
@@ -124,3 +128,30 @@ Installed files:
 The installer associates only dedicated measurement MIME types,
 not generic binary or text files. To choose another default later, use the file manager's
 **Open With** settings.
+
+## Bundled MDBTools
+
+Only `mdb-export` is bundled, not the entire MDBTools suite. The pinned
+`mdbtools/` submodule contains the corresponding upstream source (v1.0.1).
+The same source is also included as
+`vendor/mdbtools/mdbtools-v1.0.1-source.tar.gz`, so it is available even in
+GitHub ZIP downloads that omit submodule contents.
+`vendor/mdbtools/linux-x86_64/mdb-export` is a statically linked executable
+built from that source with `build-mdbtools-linux.sh` in Alpine 3.20, with GLib
+disabled. `vendor/mdbtools/windows/mdb-export.exe` is the [v1.0.1 static build
+from liuxspro](https://github.com/liuxspro/mdbtools-win-build-action/releases/tag/v1.0.1),
+whose [build recipe](https://github.com/liuxspro/mdbtools-win-build-action/tree/v1.0.1)
+is public; its two patches are copied into `vendor/mdbtools/windows/`. The
+viewer puts the matching bundled executable on its own process
+`PATH` when loading an Arbin file, so it does not change the user's system `PATH`.
+The command-line tool is GPL-licensed; the included `vendor/mdbtools/COPYING`
+and `COPYING.LIB` contain the GPL and LGPL license texts.
+See [third-party license notes](THIRD_PARTY_LICENSES.md) for the other readers.
+
+The bundled binary SHA-256 hashes are:
+
+```text
+Linux x86_64  7a89ff8675abc52290b1414a8c21542fee7a501d1fb1ac06d196039df86cb532
+Windows x64   e2c9d70d885dd1f8849c1489db23b03f0132399d3eb033bbf48eb10b0bc965a8
+Source tar    b60f72122a3fa4024e43bb3c52da4c3aab62c0dc45da9733cd8c2665ca0022fa
+```

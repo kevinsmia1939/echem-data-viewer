@@ -7,7 +7,7 @@ applications_dir="$data_dir/applications"
 mime_dir="$data_dir/mime"
 venv_dir="$viewer_dir/.venv"
 
-if [[ ! -f "$viewer_dir/galvani/galvani/Nova.py" || ! -f "$viewer_dir/gamry-parser/gamry_parser/gamryparser.py" || ! -f "$viewer_dir/NewareNDA/NewareNDA/NewareNDA.py" ]]; then
+if [[ ! -f "$viewer_dir/galvani/galvani/Nova.py" || ! -f "$viewer_dir/gamry-parser/gamry_parser/gamryparser.py" || ! -f "$viewer_dir/NewareNDA/NewareNDA/NewareNDA.py" || ! -f "$viewer_dir/mdbtools/COPYING" ]]; then
     if [[ ! -d "$viewer_dir/.git" ]]; then
         echo "Reader submodules missing. Clone with: git clone --recurse-submodules https://github.com/kevinsmia1939/echem-data-viewer.git" >&2
         exit 1
@@ -17,6 +17,15 @@ fi
 
 python3 -m venv --clear --system-site-packages "$venv_dir"
 "$venv_dir/bin/python" -m pip install -r "$viewer_dir/requirements.txt"
+
+if [[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]]; then
+    bundled_export="$viewer_dir/vendor/mdbtools/linux-x86_64/mdb-export"
+    if [[ ! -x "$bundled_export" ]]; then
+        echo "Bundled Linux x86_64 mdb-export is missing or not executable; Arbin .res will not work." >&2
+        exit 1
+    fi
+    "$bundled_export" --version >/dev/null
+fi
 
 mkdir -p "$applications_dir" "$mime_dir/packages"
 "$venv_dir/bin/python" - "$viewer_dir" "$applications_dir" <<'PY'
@@ -51,6 +60,6 @@ xdg-mime default org.kevin.EchemDataViewer.desktop application/x-neware-nda
 xdg-mime default org.kevin.EchemDataViewer.desktop application/x-neware-ndax
 xdg-mime default org.kevin.EchemDataViewer.desktop application/x-arbin-res
 echo "Installed Electrochemistry Data Viewer; default for .nox, .mpr, .mpt, .dta, .nda, .ndax and .res files."
-if ! command -v mdb-export >/dev/null 2>&1; then
-    echo "Arbin .res files also require MDBTools (mdb-export); install the mdbtools system package." >&2
+if [[ "$(uname -m)" != x86_64 ]] && ! command -v mdb-export >/dev/null 2>&1; then
+    echo "Arbin .res on this CPU needs MDBTools (mdb-export) installed separately; the bundled Linux binary is x86_64 only." >&2
 fi

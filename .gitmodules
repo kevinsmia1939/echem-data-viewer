@@ -7,3 +7,6 @@
 [submodule "NewareNDA"]
 	path = NewareNDA
 	url = https://github.com/Solid-Energy-Systems/NewareNDA.git
+[submodule "mdbtools"]
+	path = mdbtools
+	url = https://github.com/mdbtools/mdbtools.git

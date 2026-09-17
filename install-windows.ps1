@@ -3,7 +3,8 @@ param([switch]$SkipFileAssociations)
 
 $ErrorActionPreference = 'Stop'
 $viewerDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$readerFiles = @('galvani\galvani\Nova.py', 'gamry-parser\gamry_parser\gamryparser.py', 'NewareNDA\NewareNDA\NewareNDA.py')
+$readerFiles = @('galvani\galvani\Nova.py', 'gamry-parser\gamry_parser\gamryparser.py', 'NewareNDA\NewareNDA\NewareNDA.py', 'mdbtools\COPYING')
+$mdbExport = Join-Path $viewerDir 'vendor\mdbtools\windows\mdb-export.exe'
 $venvDir = Join-Path $viewerDir '.venv'
 $viewerScript = Join-Path $viewerDir 'echem_data_viewer.py'
 
@@ -13,6 +14,13 @@ if (@($readerFiles | Where-Object { -not (Test-Path (Join-Path $viewerDir $_)) }
     }
     & git -C $viewerDir submodule update --init --recursive
     if ($LASTEXITCODE -ne 0) { throw 'Could not download the reader submodules.' }
+}
+if ([Environment]::Is64BitOperatingSystem -and -not (Test-Path $mdbExport)) {
+    throw 'Bundled Windows mdb-export.exe is missing. Reclone or update the viewer repository.'
+}
+if ([Environment]::Is64BitOperatingSystem) {
+    & $mdbExport --version | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Bundled mdb-export.exe could not run on this Windows system.' }
 }
 
 if (Get-Command py -ErrorAction SilentlyContinue) {
@@ -65,5 +73,5 @@ Write-Host 'Installed Electrochemistry Data Viewer for this user.'
 Write-Host "Start Menu shortcut: $shortcutPath"
 if (-not $SkipFileAssociations) {
     Write-Host 'Registered .nox, .mpr, .mpt, .dta, .nda, .ndax and .res. If double-click still opens another app, choose this viewer in Windows Settings > Apps > Default apps.'
-    Write-Host 'Arbin .res support requires MDBTools (mdb-export) installed separately and available on PATH.'
+    Write-Host 'Arbin .res uses the bundled MDBTools mdb-export.exe on 64-bit Windows.'
 }
