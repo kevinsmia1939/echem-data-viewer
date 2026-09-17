@@ -1,9 +1,11 @@
 # Electrochemistry Data Viewer
 
 Launch **Electrochemistry Data Viewer** from the applications menu, or double-click
-a `.nox`, `.mpr`, or `.mpt` file. The project includes the NOX-capable
-[Galvani fork](https://github.com/kevinsmia1939/galvani) as a Git submodule at
-`galvani/`. The viewer uses that pinned copy, not an unrelated installed Galvani.
+a `.nox`, `.mpr`, `.mpt`, `.dta`, `.nda`, `.ndax`, or `.res` file. The project pins
+the [Galvani fork](https://github.com/kevinsmia1939/galvani),
+[gamry-parser](https://github.com/bcliang/gamry-parser), and
+[NewareNDA](https://github.com/Solid-Energy-Systems/NewareNDA) as Git submodules.
+The viewer uses these bundled readers, not unrelated installed versions.
 
 ## Screenshots
 
@@ -17,7 +19,7 @@ Capacity–voltage plot of a BioLogic cycling measurement, with the scrollable s
 
 ## Install on Linux
 
-Python 3, Git, and the `venv` module are required. Clone with the submodule and
+Python 3, Git, and the `venv` module are required. Clone with the submodules and
 run the installer from any directory:
 
 ```bash
@@ -26,11 +28,12 @@ bash echem-data-viewer/install.sh
 ```
 
 If you already cloned without `--recurse-submodules`, the installer initializes
-the submodule automatically. It creates `.venv`, installs PySide6, Matplotlib and
-NumPy from `requirements.txt`, then installs a launcher and MIME associations for
+the submodules automatically. It creates `.venv`, installs PySide6, Matplotlib,
+NumPy and pandas from `requirements.txt`, then installs a launcher and MIME associations for
 the current user. No `sudo` is needed. On Linux, `desktop-file-validate`,
 `update-mime-database`, `update-desktop-database` and `xdg-mime` must also be
 available. The app itself does not need internet access after installation.
+Arbin `.res` also needs the system `mdbtools` package (`mdb-export` on PATH).
 
 ## Install on Windows
 
@@ -42,12 +45,15 @@ powershell -ExecutionPolicy Bypass -File .\echem-data-viewer\install-windows.ps1
 ```
 
 The Windows installer creates `.venv`, installs the Python packages, adds a
-Start Menu shortcut, and registers `.nox`, `.mpr` and `.mpt` under the current
+Start Menu shortcut, and registers `.nox`, `.mpr`, `.mpt`, `.dta`, `.nda`, `.ndax`
+and `.res` under the current
 user (no administrator rights needed). Windows may retain an existing protected
 default-app choice; if double-click opens another program, select the viewer in
 **Settings → Apps → Default apps** or **Open with**. Use `-SkipFileAssociations`
 to install without registering these extensions. Windows installation and GUI
 behavior have not been run on Windows in this environment.
+Arbin `.res` requires a separate MDBTools installation with `mdb-export` on PATH;
+the Windows installer does not bundle it. Other formats need only the Python dependencies.
 
 - Default axes: time (s) horizontally, voltage (V) vertically.
 - **Time unit** selects seconds (default), hours, or days for time signals on
@@ -72,6 +78,17 @@ behavior have not been run on Windows in this environment.
   Capacity uses recorded cumulative charge where available, otherwise integrates
   current over time within each step. The step tooltip states its source.
   Unknown MPR binary columns produce an error rather than guessed data.
+- Gamry `.dta` uses the bundled gamry-parser. Each recorded curve is one plotted
+  step; numeric columns remain available, with time, voltage and current aliases
+  where those measurements exist. Capacity is calculated from current and time.
+- Neware `.nda` and `.ndax` use the bundled NewareNDA reader. Curves split at
+  recorded cycle/step boundaries. Charge/discharge capacity counters are in mAh
+  and become the recorded capacity choice; current is converted from mA to A.
+  This viewer uses the file's cycle numbers rather than the library's optional
+  synthetic cycle numbering. Some NDAX files have missing points that the
+  NewareNDA reader interpolates.
+- Arbin `.res` uses Galvani's converter and MDBTools. Curves split at test,
+  cycle and step boundaries; Arbin's Ah counters become recorded capacity in mAh.
 - Check/uncheck steps; **Active** selects steps with median absolute current
   greater than 1 mA. Missing signals are skipped and counted in the status bar.
 - The default legend is outside the axes with columns sized to fit the window.
@@ -104,6 +121,6 @@ Installed files:
 - `$XDG_DATA_HOME/applications/org.kevin.EchemDataViewer.desktop` (defaults to `~/.local/share/applications`)
 - `$XDG_DATA_HOME/mime/packages/echem-data-viewer.xml` (defaults to `~/.local/share/mime/packages`)
 
-The installer associates only the dedicated NOVA and BioLogic MIME types,
+The installer associates only dedicated measurement MIME types,
 not generic binary or text files. To choose another default later, use the file manager's
 **Open With** settings.

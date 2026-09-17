@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Desktop viewer for Metrohm NOVA and BioLogic files using Galvani."""
+"""Desktop viewer for electrochemical measurements from multiple instruments."""
 from pathlib import Path
 from types import SimpleNamespace
 import io
@@ -19,6 +19,13 @@ if not (FORK / "galvani" / "Nova.py").is_file():
         "in the viewer directory, then restart the app."
     )
 sys.path.insert(0, str(FORK))
+for directory, marker in (("gamry-parser", "gamry_parser/gamryparser.py"),
+                          ("NewareNDA", "NewareNDA/NewareNDA.py")):
+    library = Path(__file__).resolve().parent / directory
+    if not (library / marker).is_file():
+        raise RuntimeError(f"Bundled {directory} is missing. Run "
+                           "'git submodule update --init --recursive' and restart.")
+    sys.path.insert(0, str(library))
 
 CAPACITY = "__capacity_mah__"
 TIME_UNITS = (("Seconds (s)", "s", 1.0), ("Hours (h)", "h", 3600.0),
@@ -38,6 +45,7 @@ KNOWN = {
 
 def read_file(path):
     from galvani import NOXfile, MPRfile, MPTfile
+    from instrument_readers import read_gamry, read_neware, read_arbin
     path = Path(path)
     if path.suffix.lower() == ".nox":
         nox = NOXfile(path)
@@ -53,8 +61,14 @@ def read_file(path):
         except UnicodeDecodeError:
             data, _ = MPTfile(io.BytesIO(raw), encoding="cp1252")
         nox = biologic_datasets(data)
+    elif path.suffix.lower() == ".dta":
+        nox = read_gamry(path)
+    elif path.suffix.lower() in (".nda", ".ndax"):
+        nox = read_neware(path)
+    elif path.suffix.lower() == ".res":
+        nox = read_arbin(path)
     else:
-        raise ValueError("Supported formats: NOVA .nox, BioLogic .mpr and .mpt")
+        raise ValueError("Supported formats: .nox, .mpr, .mpt, .dta, .nda, .ndax and .res")
     if not nox.datasets:
         raise ValueError("This file contains no readable measurement datasets.")
     return nox
@@ -280,7 +294,7 @@ class Viewer(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.legend_dock)
         self.legend_dock.setMinimumWidth(170)
         self.legend_dock.hide()
-        self.statusBar().showMessage("Open a .nox, .mpr or .mpt file to begin.")
+        self.statusBar().showMessage("Open a supported electrochemistry file to begin.")
         self.save_button.setEnabled(False)
         self.canvas.mpl_connect("resize_event", self.on_resize)
 
@@ -296,8 +310,10 @@ class Viewer(QtWidgets.QMainWindow):
     def choose_file(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open electrochemistry measurement", str(self.path.parent) if self.path else "",
-            "Electrochemistry files (*.nox *.NOX *.mpr *.MPR *.mpt *.MPT);;"
-            "NOVA (*.nox *.NOX);;BioLogic (*.mpr *.MPR *.mpt *.MPT);;All files (*)"
+            "Electrochemistry files (*.nox *.NOX *.mpr *.MPR *.mpt *.MPT *.dta *.DTA *.nda *.NDA *.ndax *.NDAX *.res *.RES);;"
+            "NOVA (*.nox *.NOX);;BioLogic (*.mpr *.MPR *.mpt *.MPT);;"
+            "Gamry (*.dta *.DTA);;Neware (*.nda *.NDA *.ndax *.NDAX);;"
+            "Arbin (*.res *.RES);;All files (*)"
         )
         if path:
             self.open_file(Path(path))

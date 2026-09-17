@@ -3,16 +3,16 @@ param([switch]$SkipFileAssociations)
 
 $ErrorActionPreference = 'Stop'
 $viewerDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$galvaniReader = Join-Path $viewerDir 'galvani\galvani\Nova.py'
+$readerFiles = @('galvani\galvani\Nova.py', 'gamry-parser\gamry_parser\gamryparser.py', 'NewareNDA\NewareNDA\NewareNDA.py')
 $venvDir = Join-Path $viewerDir '.venv'
 $viewerScript = Join-Path $viewerDir 'echem_data_viewer.py'
 
-if (-not (Test-Path $galvaniReader)) {
+if (@($readerFiles | Where-Object { -not (Test-Path (Join-Path $viewerDir $_)) }).Count -gt 0) {
     if (-not (Test-Path (Join-Path $viewerDir '.git'))) {
-        throw 'Galvani submodule is missing. Clone with: git clone --recurse-submodules https://github.com/kevinsmia1939/echem-data-viewer.git'
+        throw 'Reader submodules are missing. Clone with: git clone --recurse-submodules https://github.com/kevinsmia1939/echem-data-viewer.git'
     }
     & git -C $viewerDir submodule update --init --recursive
-    if ($LASTEXITCODE -ne 0) { throw 'Could not download the Galvani submodule.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Could not download the reader submodules.' }
 }
 
 if (Get-Command py -ErrorAction SilentlyContinue) {
@@ -37,7 +37,7 @@ $shortcut.TargetPath = $pythonwExe
 $shortcut.Arguments = '"' + $viewerScript + '"'
 $shortcut.WorkingDirectory = $viewerDir
 $shortcut.IconLocation = $pythonwExe
-$shortcut.Description = 'View NOVA NOX and BioLogic MPR/MPT measurements'
+$shortcut.Description = 'View NOVA, BioLogic, Gamry, Neware and Arbin measurements'
 $shortcut.Save()
 
 if (-not $SkipFileAssociations) {
@@ -50,7 +50,7 @@ if (-not $SkipFileAssociations) {
     $openCommand = '"{0}" "{1}" "%1"' -f $pythonwExe, $viewerScript
     Set-Item -Path $commandKey -Value $openCommand
 
-    foreach ($extension in @('.nox', '.mpr', '.mpt')) {
+    foreach ($extension in @('.nox', '.mpr', '.mpt', '.dta', '.nda', '.ndax', '.res')) {
         $extensionKey = Join-Path $classes $extension
         $openWithKey = Join-Path $extensionKey 'OpenWithProgids'
         New-Item -Path $openWithKey -Force | Out-Null
@@ -64,5 +64,6 @@ if (-not $SkipFileAssociations) {
 Write-Host 'Installed Electrochemistry Data Viewer for this user.'
 Write-Host "Start Menu shortcut: $shortcutPath"
 if (-not $SkipFileAssociations) {
-    Write-Host 'Registered .nox, .mpr and .mpt. If double-click still opens another app, choose this viewer in Windows Settings > Apps > Default apps.'
+    Write-Host 'Registered .nox, .mpr, .mpt, .dta, .nda, .ndax and .res. If double-click still opens another app, choose this viewer in Windows Settings > Apps > Default apps.'
+    Write-Host 'Arbin .res support requires MDBTools (mdb-export) installed separately and available on PATH.'
 }

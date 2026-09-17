@@ -1,3 +1,9 @@
 [submodule "galvani"]
 	path = galvani
 	url = https://github.com/kevinsmia1939/galvani.git
+[submodule "gamry-parser"]
+	path = gamry-parser
+	url = https://github.com/bcliang/gamry-parser.git
+[submodule "NewareNDA"]
+	path = NewareNDA
+	url = https://github.com/Solid-Energy-Systems/NewareNDA.git

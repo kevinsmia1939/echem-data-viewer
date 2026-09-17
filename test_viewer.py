@@ -12,6 +12,54 @@ from galvani.Nova import NovaDataset
 from types import SimpleNamespace
 
 
+class InstrumentReaderTests(unittest.TestCase):
+    def test_gamry_curves_and_axes(self):
+        root = Path(__file__).parent / 'gamry-parser/tests'
+        data = read_file(root / 'cv_data.dta')
+        self.assertEqual(len(data.datasets), 5)
+        for dataset in data.datasets:
+            self.assertIn('CalcTime', dataset)
+            self.assertIn('EI_0.CalcPotential', dataset)
+            self.assertIn('EI_0.CalcCurrent', dataset)
+            self.assertEqual(signal_values(dataset, CAPACITY)[0], 0)
+        eis = read_file(root / 'eispot_data.dta')
+        self.assertIn('Freq', eis.datasets[0])
+        self.assertIn('EI_0.CalcPotential', eis.datasets[0])
+
+    def test_neware_recorded_capacity(self):
+        root = Path(__file__).parent / 'NewareNDA/tests/nda/github/Issue72'
+        data = read_file(root / 'TestFile.nda')
+        self.assertGreater(len(data.datasets), 1)
+        for dataset in data.datasets:
+            self.assertIn('EI_0.CalcCharge', dataset)
+            self.assertEqual(signal_values(dataset, CAPACITY)[0], 0)
+        active = next(d for d in data.datasets if np.ptp(signal_values(d, CAPACITY)) > 0)
+        self.assertGreater(signal_values(active, CAPACITY)[-1], 0)
+
+    def test_neware_ndax(self):
+        root = Path(__file__).parent / 'NewareNDA/tests/nda/github/Issue60'
+        data = read_file(root / 'BTS85-36-6-5-110-20240424.ndax')
+        self.assertGreater(len(data.datasets), 1)
+        self.assertIn('EI_0.CalcPotential', data.datasets[0])
+        self.assertTrue(any(np.ptp(signal_values(d, CAPACITY)) > 0 for d in data.datasets))
+
+    def test_arbin_galvani_conversion(self):
+        import shutil
+        if not shutil.which('mdb-export'):
+            self.skipTest('MDBTools is not installed')
+        root = Path(__file__).parent / 'galvani/tests/testdata'
+        data = read_file(root / 'arbin1.res')
+        self.assertGreater(len(data.datasets), 1)
+        active = next(d for d in data.datasets if np.ptp(signal_values(d, CAPACITY)) > 0)
+        self.assertIn('EI_0.CalcPotential', active)
+        self.assertEqual(signal_values(active, CAPACITY)[0], 0)
+
+    def test_arbin_missing_mdbtools_message(self):
+        with patch('instrument_readers.shutil.which', return_value=None):
+            with self.assertRaisesRegex(RuntimeError, 'MDBTools'):
+                read_file(Path('sample.res'))
+
+
 class ViewerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -39,6 +87,13 @@ class ViewerTests(unittest.TestCase):
     def test_bundled_galvani_is_used(self):
         import galvani
         self.assertTrue(Path(galvani.__file__).resolve().is_relative_to(FORK.resolve()))
+
+    def test_bundled_new_readers(self):
+        import gamry_parser
+        import NewareNDA
+        root = Path(__file__).parent
+        self.assertTrue(Path(gamry_parser.__file__).resolve().is_relative_to(root / 'gamry-parser'))
+        self.assertTrue(Path(NewareNDA.__file__).resolve().is_relative_to(root / 'NewareNDA'))
 
     def tearDown(self):
         self.viewer.close()

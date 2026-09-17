@@ -13,4 +13,21 @@
     <glob pattern="*.mpt" weight="80"/>
     <sub-class-of type="text/plain"/>
   </mime-type>
+  <mime-type type="application/x-gamry-dta">
+    <comment>Gamry DTA measurement</comment>
+    <glob pattern="*.dta" weight="80"/>
+    <sub-class-of type="text/plain"/>
+  </mime-type>
+  <mime-type type="application/x-neware-nda">
+    <comment>Neware NDA cycling measurement</comment>
+    <glob pattern="*.nda" weight="80"/>
+  </mime-type>
+  <mime-type type="application/x-neware-ndax">
+    <comment>Neware NDAX cycling measurement</comment>
+    <glob pattern="*.ndax" weight="80"/>
+  </mime-type>
+  <mime-type type="application/x-arbin-res">
+    <comment>Arbin RES cycling measurement</comment>
+    <glob pattern="*.res" weight="80"/>
+  </mime-type>
 </mime-info>

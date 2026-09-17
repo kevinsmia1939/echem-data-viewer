@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
 Name=Electrochemistry Data Viewer
-Comment=View Metrohm NOVA and BioLogic measurements with selectable axes
+Comment=View NOVA, BioLogic, Gamry, Neware and Arbin measurements with selectable axes
 Exec=/usr/bin/env @PYTHON@ @APP@ %F
 Icon=office-chart-line
 Terminal=false
 Categories=Science;DataVisualization;
-MimeType=application/x-metrohm-nova-nox;application/x-biologic-mpr;application/x-biologic-mpt;
-Keywords=electrochemistry;NOVA;NOX;Autolab;BioLogic;EC-Lab;MPR;MPT;voltage;capacity;plot;
+MimeType=application/x-metrohm-nova-nox;application/x-biologic-mpr;application/x-biologic-mpt;application/x-gamry-dta;application/x-neware-nda;application/x-neware-ndax;application/x-arbin-res;
+Keywords=electrochemistry;NOVA;NOX;Autolab;BioLogic;EC-Lab;MPR;MPT;Gamry;Neware;Arbin;voltage;capacity;plot;
 StartupNotify=false
