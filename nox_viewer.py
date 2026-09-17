@@ -11,9 +11,13 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
-FORK = Path(__file__).resolve().parent.parent / "galvani"
-if (FORK / "galvani" / "Nova.py").is_file():
-    sys.path.insert(0, str(FORK))
+FORK = Path(__file__).resolve().parent / "galvani"
+if not (FORK / "galvani" / "Nova.py").is_file():
+    raise RuntimeError(
+        "Bundled Galvani is missing. Run 'git submodule update --init --recursive' "
+        "in the viewer directory, then restart the app."
+    )
+sys.path.insert(0, str(FORK))
 
 CAPACITY = "__capacity_mah__"
 TIME_UNITS = (("Seconds (s)", "s", 1.0), ("Hours (h)", "h", 3600.0),

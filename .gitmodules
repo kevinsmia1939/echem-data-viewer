@@ -1,0 +1,3 @@
+[submodule "galvani"]
+	path = galvani
+	url = https://github.com/kevinsmia1939/galvani.git

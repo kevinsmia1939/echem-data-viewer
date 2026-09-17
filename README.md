@@ -1,17 +1,43 @@
 # Electrochemistry Data Viewer
 
 Launch **Electrochemistry Data Viewer** from the applications menu, or double-click
-a `.nox`, `.mpr`, or `.mpt` file. It uses the sibling `../galvani` checkout,
-including its NOVA and BioLogic readers. The existing app folder and launcher ID
-are retained so older shortcuts continue working.
-The existing system Python provides PySide6, Matplotlib and NumPy.
+a `.nox`, `.mpr`, or `.mpt` file. The project includes the NOX-capable
+[Galvani fork](https://github.com/kevinsmia1939/galvani) as a Git submodule at
+`galvani/`. The viewer uses that pinned copy, not an unrelated installed Galvani.
 
-For another machine, install `requirements.txt` and the NOX-capable
-[Galvani fork](https://github.com/kevinsmia1939/galvani). This checkout
-automatically uses a sibling `../galvani` directory when present; otherwise
-it imports the installed Galvani package. The current `install.sh` and
-`.desktop` launcher contain paths specific to `/home/kevin` and must be
-adapted before installing elsewhere.
+## Install on Linux
+
+Python 3, Git, and the `venv` module are required. Clone with the submodule and
+run the installer from any directory:
+
+```bash
+git clone --recurse-submodules https://github.com/kevinsmia1939/echem-data-viewer.git
+bash echem-data-viewer/install.sh
+```
+
+If you already cloned without `--recurse-submodules`, the installer initializes
+the submodule automatically. It creates `.venv`, installs PySide6, Matplotlib and
+NumPy from `requirements.txt`, then installs a launcher and MIME associations for
+the current user. No `sudo` is needed. On Linux, `desktop-file-validate`,
+`update-mime-database`, `update-desktop-database` and `xdg-mime` must also be
+available. The app itself does not need internet access after installation.
+
+## Install on Windows
+
+Install Python 3 and Git, then run in PowerShell:
+
+```powershell
+git clone --recurse-submodules https://github.com/kevinsmia1939/echem-data-viewer.git
+powershell -ExecutionPolicy Bypass -File .\echem-data-viewer\install-windows.ps1
+```
+
+The Windows installer creates `.venv`, installs the Python packages, adds a
+Start Menu shortcut, and registers `.nox`, `.mpr` and `.mpt` under the current
+user (no administrator rights needed). Windows may retain an existing protected
+default-app choice; if double-click opens another program, select the viewer in
+**Settings → Apps → Default apps** or **Open with**. Use `-SkipFileAssociations`
+to install without registering these extensions. Windows installation and GUI
+behavior have not been run on Windows in this environment.
 
 - Default axes: time (s) horizontally, voltage (V) vertically.
 - **Time unit** selects seconds (default), hours, or days for time signals on
@@ -48,22 +74,22 @@ adapted before installing elsewhere.
 - **Open data…** / Ctrl+O opens another measurement. Opening multiple files from
   the file manager creates a separate window for each file.
 
-Run directly:
+On Linux, run directly after installation:
 
 ```bash
-/usr/bin/python3 /home/kevin/Dropbox/Desktop/software/nox-viewer/nox_viewer.py /path/to/measurement.nox
+./echem-data-viewer/.venv/bin/python ./echem-data-viewer/nox_viewer.py /path/to/measurement.nox
 ```
 
-Install/re-register the menu entry and file association (no sudo required):
+Reinstall/re-register the Linux menu entry and file associations:
 
 ```bash
-bash /home/kevin/Dropbox/Desktop/software/nox-viewer/install.sh
+bash ./echem-data-viewer/install.sh
 ```
 
 Installed files:
 
-- `/home/kevin/.local/share/applications/org.kevin.NoxViewer.desktop`
-- `/home/kevin/.local/share/mime/packages/metrohm-nova-nox.xml`
+- `$XDG_DATA_HOME/applications/org.kevin.NoxViewer.desktop` (defaults to `~/.local/share/applications`)
+- `$XDG_DATA_HOME/mime/packages/metrohm-nova-nox.xml` (defaults to `~/.local/share/mime/packages`)
 
 The installer associates only the dedicated NOVA and BioLogic MIME types,
 not generic binary or text files. To choose another default later, use the file manager's

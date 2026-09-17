@@ -1,5 +1,3 @@
 numpy
 matplotlib
 PySide6
-# Install the NOX-capable Galvani fork separately:
-# python3 -m pip install git+https://github.com/kevinsmia1939/galvani.git

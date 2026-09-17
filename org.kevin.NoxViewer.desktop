@@ -2,8 +2,7 @@
 Type=Application
 Name=Electrochemistry Data Viewer
 Comment=View Metrohm NOVA and BioLogic measurements with selectable axes
-Exec=/usr/bin/python3 /home/kevin/Dropbox/Desktop/software/nox-viewer/nox_viewer.py %F
-TryExec=/usr/bin/python3
+Exec=/usr/bin/env @PYTHON@ @APP@ %F
 Icon=office-chart-line
 Terminal=false
 Categories=Science;DataVisualization;

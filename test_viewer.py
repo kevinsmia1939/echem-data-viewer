@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import numpy as np
 from matplotlib.backend_bases import MouseEvent
-from nox_viewer import QtWidgets, Viewer, FileLoader, signal_values, CAPACITY, read_file, biologic_datasets
+from nox_viewer import QtWidgets, Viewer, FileLoader, signal_values, CAPACITY, FORK, read_file, biologic_datasets
 from galvani.Nova import NovaDataset
 from types import SimpleNamespace
 
@@ -35,6 +35,10 @@ class ViewerTests(unittest.TestCase):
         self.viewer.set_data(SimpleNamespace(datasets=datasets))
         self.app.processEvents()
         self.viewer.canvas.draw()
+
+    def test_bundled_galvani_is_used(self):
+        import galvani
+        self.assertTrue(Path(galvani.__file__).resolve().is_relative_to(FORK.resolve()))
 
     def tearDown(self):
         self.viewer.close()
