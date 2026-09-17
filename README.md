@@ -5,6 +5,16 @@ a `.nox`, `.mpr`, or `.mpt` file. The project includes the NOX-capable
 [Galvani fork](https://github.com/kevinsmia1939/galvani) as a Git submodule at
 `galvani/`. The viewer uses that pinned copy, not an unrelated installed Galvani.
 
+## Screenshots
+
+Time–voltage plot of a NOVA measurement:
+
+![NOVA time–voltage plot in Electrochemistry Data Viewer](data/screenshot/screenshot1.png)
+
+Capacity–voltage plot of a BioLogic cycling measurement, with the scrollable step legend:
+
+![BioLogic capacity–voltage plot with a scrollable legend](data/screenshot/screenshot2.png)
+
 ## Install on Linux
 
 Python 3, Git, and the `venv` module are required. Clone with the submodule and
