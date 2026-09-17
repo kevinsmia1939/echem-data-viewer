@@ -31,7 +31,7 @@ KNOWN = {
     "Correctedtime": "Step time (s)",
     "Index": "Point index",
     "EI_0.CalcPower": "Power (W)",
-    CAPACITY: "Capacity (mAh; each step starts at 0)",
+    CAPACITY: "Capacity (mAh)",
 }
 
 
