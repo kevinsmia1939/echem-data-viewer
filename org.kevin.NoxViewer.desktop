@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Electrochemistry Data Viewer
+Comment=View Metrohm NOVA and BioLogic measurements with selectable axes
+Exec=/usr/bin/python3 /home/kevin/Dropbox/Desktop/software/nox-viewer/nox_viewer.py %F
+TryExec=/usr/bin/python3
+Icon=office-chart-line
+Terminal=false
+Categories=Science;DataVisualization;
+MimeType=application/x-metrohm-nova-nox;application/x-biologic-mpr;application/x-biologic-mpt;
+Keywords=electrochemistry;NOVA;NOX;Autolab;BioLogic;EC-Lab;MPR;MPT;voltage;capacity;plot;
+StartupNotify=false
