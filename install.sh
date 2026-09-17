@@ -15,7 +15,7 @@ if [[ ! -f "$viewer_dir/galvani/galvani/Nova.py" ]]; then
     git -C "$viewer_dir" submodule update --init --recursive
 fi
 
-python3 -m venv --system-site-packages "$venv_dir"
+python3 -m venv --clear --system-site-packages "$venv_dir"
 "$venv_dir/bin/python" -m pip install -r "$viewer_dir/requirements.txt"
 
 mkdir -p "$applications_dir" "$mime_dir/packages"
@@ -24,7 +24,7 @@ from pathlib import Path
 import sys
 
 viewer_dir, applications_dir = map(Path, sys.argv[1:])
-template = (viewer_dir / "org.kevin.NoxViewer.desktop").read_text(encoding="utf-8")
+template = (viewer_dir / "org.kevin.EchemDataViewer.desktop").read_text(encoding="utf-8")
 
 def desktop_quote(path):
     value = str(path)
@@ -33,15 +33,17 @@ def desktop_quote(path):
     return '"' + value + '"'
 
 entry = template.replace("@PYTHON@", desktop_quote(viewer_dir / ".venv/bin/python"))
-entry = entry.replace("@APP@", desktop_quote(viewer_dir / "nox_viewer.py"))
-(applications_dir / "org.kevin.NoxViewer.desktop").write_text(entry, encoding="utf-8")
+entry = entry.replace("@APP@", desktop_quote(viewer_dir / "echem_data_viewer.py"))
+(applications_dir / "org.kevin.EchemDataViewer.desktop").write_text(entry, encoding="utf-8")
 PY
 
-desktop-file-validate "$applications_dir/org.kevin.NoxViewer.desktop"
-install -m 644 "$viewer_dir/metrohm-nova-nox.xml" "$mime_dir/packages/metrohm-nova-nox.xml"
+desktop-file-validate "$applications_dir/org.kevin.EchemDataViewer.desktop"
+install -m 644 "$viewer_dir/echem-data-viewer.xml" "$mime_dir/packages/echem-data-viewer.xml"
+# Remove only the launcher/MIME definition installed by the old app name.
+rm -f -- "$applications_dir/org.kevin.NoxViewer.desktop" "$mime_dir/packages/metrohm-nova-nox.xml"
 update-mime-database "$mime_dir"
 update-desktop-database "$applications_dir"
-xdg-mime default org.kevin.NoxViewer.desktop application/x-metrohm-nova-nox
-xdg-mime default org.kevin.NoxViewer.desktop application/x-biologic-mpr
-xdg-mime default org.kevin.NoxViewer.desktop application/x-biologic-mpt
+xdg-mime default org.kevin.EchemDataViewer.desktop application/x-metrohm-nova-nox
+xdg-mime default org.kevin.EchemDataViewer.desktop application/x-biologic-mpr
+xdg-mime default org.kevin.EchemDataViewer.desktop application/x-biologic-mpt
 echo "Installed Electrochemistry Data Viewer; default for .nox, .mpr and .mpt files."

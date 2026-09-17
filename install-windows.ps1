@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 $viewerDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $galvaniReader = Join-Path $viewerDir 'galvani\galvani\Nova.py'
 $venvDir = Join-Path $viewerDir '.venv'
-$viewerScript = Join-Path $viewerDir 'nox_viewer.py'
+$viewerScript = Join-Path $viewerDir 'echem_data_viewer.py'
 
 if (-not (Test-Path $galvaniReader)) {
     if (-not (Test-Path (Join-Path $viewerDir '.git'))) {
@@ -16,9 +16,9 @@ if (-not (Test-Path $galvaniReader)) {
 }
 
 if (Get-Command py -ErrorAction SilentlyContinue) {
-    & py -3 -m venv $venvDir
+    & py -3 -m venv --clear $venvDir
 } elseif (Get-Command python -ErrorAction SilentlyContinue) {
-    & python -m venv $venvDir
+    & python -m venv --clear $venvDir
 } else {
     throw 'Python 3 is required. Install it from python.org, then rerun this script.'
 }

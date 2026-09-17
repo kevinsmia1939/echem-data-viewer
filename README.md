@@ -77,7 +77,7 @@ behavior have not been run on Windows in this environment.
 On Linux, run directly after installation:
 
 ```bash
-./echem-data-viewer/.venv/bin/python ./echem-data-viewer/nox_viewer.py /path/to/measurement.nox
+./echem-data-viewer/.venv/bin/python ./echem-data-viewer/echem_data_viewer.py /path/to/measurement.nox
 ```
 
 Reinstall/re-register the Linux menu entry and file associations:
@@ -88,8 +88,8 @@ bash ./echem-data-viewer/install.sh
 
 Installed files:
 
-- `$XDG_DATA_HOME/applications/org.kevin.NoxViewer.desktop` (defaults to `~/.local/share/applications`)
-- `$XDG_DATA_HOME/mime/packages/metrohm-nova-nox.xml` (defaults to `~/.local/share/mime/packages`)
+- `$XDG_DATA_HOME/applications/org.kevin.EchemDataViewer.desktop` (defaults to `~/.local/share/applications`)
+- `$XDG_DATA_HOME/mime/packages/echem-data-viewer.xml` (defaults to `~/.local/share/mime/packages`)
 
 The installer associates only the dedicated NOVA and BioLogic MIME types,
 not generic binary or text files. To choose another default later, use the file manager's

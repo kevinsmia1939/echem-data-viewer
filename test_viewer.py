@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import numpy as np
 from matplotlib.backend_bases import MouseEvent
-from nox_viewer import QtWidgets, Viewer, FileLoader, signal_values, CAPACITY, FORK, read_file, biologic_datasets
+from echem_data_viewer import QtWidgets, Viewer, FileLoader, signal_values, CAPACITY, FORK, read_file, biologic_datasets
 from galvani.Nova import NovaDataset
 from types import SimpleNamespace
 
@@ -83,7 +83,7 @@ class ViewerTests(unittest.TestCase):
         v.canvas.draw()
         after = v.legend.get_window_extent(v.canvas.get_renderer())
         self.assertGreater(abs(after.x0 - before.x0), 10)
-        with tempfile.TemporaryDirectory(prefix="nox-viewer-test-") as folder:
+        with tempfile.TemporaryDirectory(prefix="echem-data-viewer-test-") as folder:
             for suffix, label in (("png", "PNG"), ("pdf", "PDF"), ("svg", "SVG")):
                 target = Path(folder) / f"export.{suffix}"
                 with patch.object(QtWidgets.QFileDialog, "getSaveFileName", return_value=(str(target), f"{label} (*.{suffix})")):
